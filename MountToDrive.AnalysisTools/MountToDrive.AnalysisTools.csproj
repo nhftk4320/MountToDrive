@@ -2,10 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MountToDrive.Core\MountToDrive.Core.csproj" />
+    <ProjectReference Include="..\MountToDrive.SharedContract\MountToDrive.SharedContract.csproj" />
   </ItemGroup>
 
 </Project>

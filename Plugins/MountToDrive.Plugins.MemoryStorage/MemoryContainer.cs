@@ -1,4 +1,4 @@
-﻿using MountToDrive.MemoryStoragePlugin;
+﻿using MountToDrive.Plugins.MemoryStorage;
 using MountToDrive.SharedContract;
 using System;
 using System.Collections.Generic;
@@ -8,9 +8,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MountToDrive.MemoryStoragePlugin
+namespace MountToDrive.Plugins.MemoryStorage
 {
-    
+
     public class MemoryContainer : IDisposable
     {
         public enum ContainerOperationResult

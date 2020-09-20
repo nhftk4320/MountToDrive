@@ -1,6 +1,4 @@
-﻿using MountToDrive.Core;
-using MountToDrive.MemoryStoragePlugin;
-using MountToDrive.SharedContract;
+﻿using MountToDrive.SharedContract;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,7 +6,7 @@ using System.Linq;
 using System.Security;
 using System.Text;
 
-namespace MountToDrive.MemoryStoragePlugin
+namespace MountToDrive.Plugins.MemoryStorage
 {
     public class MemoryStorage : IFileSystemStorage, IDisposable
     {
@@ -38,7 +36,7 @@ namespace MountToDrive.MemoryStoragePlugin
             };
         }
 
-        public FileOperationResult CanDeleteDirectory(FileMeta fileMeta)
+        public FileOperationResult CanDeleteDirectory(FileRequestMeta fileMeta)
         {
             if (_memoryContainer.TryGetFile(fileMeta.PathHierarchy, out FileInternal fileInternal) == false)
             {
@@ -58,7 +56,7 @@ namespace MountToDrive.MemoryStoragePlugin
             return FileOperationResult.Success;
         }
 
-        public FileOperationResult CanDeleteFile(FileMeta fileMeta)
+        public FileOperationResult CanDeleteFile(FileRequestMeta fileMeta)
         {
             if(_memoryContainer.TryGetFile(fileMeta.PathHierarchy, out FileInternal fileInternal) == false)
             {
@@ -73,7 +71,7 @@ namespace MountToDrive.MemoryStoragePlugin
             return FileOperationResult.Success;
         }
 
-        public FileOperationResult CreateFile(FileMeta fileMeta, FileMode mode, FileOptions options, FileAttributes attributes, out object fileHandle)
+        public FileOperationResult CreateFile(FileRequestMeta fileMeta, FileMode mode, FileOptions options, FileAttributes attributes, out object fileHandle)
         {
             if (fileMeta.FileType == FileType.File)
             {
@@ -85,7 +83,7 @@ namespace MountToDrive.MemoryStoragePlugin
 
         }
 
-        private FileOperationResult CreateFile_File(FileMeta fileMeta, FileMode mode, out object fileHandle)
+        private FileOperationResult CreateFile_File(FileRequestMeta fileMeta, FileMode mode, out object fileHandle)
         {
             FileInternal fileInternal;
 
@@ -151,7 +149,7 @@ namespace MountToDrive.MemoryStoragePlugin
             }
         }
 
-        private FileOperationResult CreateFile_Directory(FileMeta fileMeta, FileMode mode)
+        private FileOperationResult CreateFile_Directory(FileRequestMeta fileMeta, FileMode mode)
         {
             MemoryContainer.ContainerOperationResult result;
             var pathHierarchy = fileMeta.PathHierarchy;
@@ -183,9 +181,9 @@ namespace MountToDrive.MemoryStoragePlugin
             return FileOperationResult.Success;
         }
 
-        public void CloseFile(FileMeta fileMeta) { }
+        public void CloseFile(FileRequestMeta fileMeta) { }
 
-        public FileOperationResult GetFileList(FileMeta fileMeta, out IList<SharedContract.FileInformation> files)
+        public FileOperationResult GetFileList(FileRequestMeta fileMeta, out IList<SharedContract.FileInformation> files)
         {
             MemoryContainer.ContainerOperationResult result = _memoryContainer.TryGetDirectory(fileMeta.PathHierarchy, out DirectoryInternal parentDirectory);
             if (result == MemoryContainer.ContainerOperationResult.NotADirectory)
@@ -203,7 +201,7 @@ namespace MountToDrive.MemoryStoragePlugin
             return FileOperationResult.Success;
         }
 
-        public FileOperationResult FlushFileBuffers(FileMeta fileMeta) => FileOperationResult.Success;
+        public FileOperationResult FlushFileBuffers(FileRequestMeta fileMeta) => FileOperationResult.Success;
 
         public long GetFreeSpace()
         {
@@ -212,7 +210,7 @@ namespace MountToDrive.MemoryStoragePlugin
 
         public long GetTotalSpace() => _totalSpaceBytes;
 
-        public FileOperationResult GetFileInfo(FileMeta fileMeta, out SharedContract.FileInformation fileInfo)
+        public FileOperationResult GetFileInfo(FileRequestMeta fileMeta, out SharedContract.FileInformation fileInfo)
         {
             if(_memoryContainer.TryGetFile(fileMeta.PathHierarchy, out FileInternal fileInternal) == false)
             {
@@ -225,7 +223,7 @@ namespace MountToDrive.MemoryStoragePlugin
             return FileOperationResult.Success;
         }
 
-        public FileOperationResult MoveFile(FileMeta oldFileMeta, FileMeta newFileMeta, bool replace)
+        public FileOperationResult MoveFile(FileRequestMeta oldFileMeta, FileRequestMeta newFileMeta, bool replace)
         {
 
             if (_memoryContainer.TryGetFile(oldFileMeta.PathHierarchy, out FileInternal fileToMove) == false)
@@ -272,7 +270,7 @@ namespace MountToDrive.MemoryStoragePlugin
             return FileOperationResult.Success;
         }
 
-        public FileOperationResult ReadFile(FileMeta fileMeta, byte[] buffer, out int bytesRead, long offset)
+        public FileOperationResult ReadFile(FileRequestMeta fileMeta, byte[] buffer, out int bytesRead, long offset)
         {
             Stream fileStream;
             if (fileMeta.FileHandle is FileInternal metaAsFileInternal)
@@ -298,7 +296,7 @@ namespace MountToDrive.MemoryStoragePlugin
             return FileOperationResult.Success;
         }
 
-        public FileOperationResult SetFileSize(FileMeta fileMeta, long length)
+        public FileOperationResult SetFileSize(FileRequestMeta fileMeta, long length)
         {
             if (_memoryContainer.TryGetFile(fileMeta.PathHierarchy, out FileInternal file) == false)
             {
@@ -313,12 +311,12 @@ namespace MountToDrive.MemoryStoragePlugin
             return FileOperationResult.Success;
         }
 
-        public FileOperationResult SetFileAttributes(FileMeta fileMeta, FileAttributes attributes)
+        public FileOperationResult SetFileAttributes(FileRequestMeta fileMeta, FileAttributes attributes)
         {
             return FileOperationResult.Success;
         }
 
-        public void Cleanup(FileMeta fileMeta, bool deleteOnClose)
+        public void Cleanup(FileRequestMeta fileMeta, bool deleteOnClose)
         {
             if (!deleteOnClose) { return; }
 
@@ -329,7 +327,7 @@ namespace MountToDrive.MemoryStoragePlugin
             }
         }
 
-        public FileOperationResult WriteFile(FileMeta fileMeta, byte[] buffer, out int bytesWritten, long offset)
+        public FileOperationResult WriteFile(FileRequestMeta fileMeta, byte[] buffer, out int bytesWritten, long offset)
         {
             FileInternal fileHandle;
             if (fileMeta.FileHandle is FileInternal metaAsFileInternal)

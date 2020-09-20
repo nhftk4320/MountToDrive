@@ -10,34 +10,34 @@ namespace MountToDrive.SharedContract
         uint MaxPathLength { get; }
         string FileSystemName { get; }
 
-        FileOperationResult CanDeleteDirectory(FileMeta fileMeta);
+        FileOperationResult CanDeleteDirectory(FileRequestMeta fileMeta);
 
-        FileOperationResult CanDeleteFile(FileMeta fileMeta);
+        FileOperationResult CanDeleteFile(FileRequestMeta fileMeta);
 
-        FileOperationResult CreateFile(FileMeta fileMeta, FileMode mode, FileOptions options, FileAttributes attributes, out object fileHandle);
+        FileOperationResult CreateFile(FileRequestMeta fileMeta, FileMode mode, FileOptions options, FileAttributes attributes, out object fileHandle);
 
-        void CloseFile(FileMeta fileMeta);
+        void CloseFile(FileRequestMeta fileMeta);
 
-        FileOperationResult GetFileList(FileMeta fileMeta, out IList<FileInformation> files);
+        FileOperationResult GetFileList(FileRequestMeta fileMeta, out IList<FileInformation> files);
 
-        FileOperationResult FlushFileBuffers(FileMeta fileMeta);
+        FileOperationResult FlushFileBuffers(FileRequestMeta fileMeta);
 
         long GetFreeSpace();
 
         long GetTotalSpace();
 
-        FileOperationResult GetFileInfo(FileMeta fileMeta, out FileInformation fileInfo);
+        FileOperationResult GetFileInfo(FileRequestMeta fileMeta, out FileInformation fileInfo);
 
-        FileOperationResult MoveFile(FileMeta oldFileMeta, FileMeta newFileMeta, bool replace);
+        FileOperationResult MoveFile(FileRequestMeta oldFileMeta, FileRequestMeta newFileMeta, bool replace);
 
-        FileOperationResult ReadFile(FileMeta fileMeta, byte[] buffer, out int bytesRead, long offset);
+        FileOperationResult ReadFile(FileRequestMeta fileMeta, byte[] buffer, out int bytesRead, long offset);
 
-        FileOperationResult SetFileSize(FileMeta fileMeta, long length);
+        FileOperationResult SetFileSize(FileRequestMeta fileMeta, long length);
 
-        FileOperationResult SetFileAttributes(FileMeta fileMeta, FileAttributes attributes);
+        FileOperationResult SetFileAttributes(FileRequestMeta fileMeta, FileAttributes attributes);
 
-        void Cleanup(FileMeta fileMeta, bool deleteOnClose);
+        void Cleanup(FileRequestMeta fileMeta, bool deleteOnClose);
 
-        FileOperationResult WriteFile(FileMeta fileMeta, byte[] buffer, out int bytesWritten, long offset);
+        FileOperationResult WriteFile(FileRequestMeta fileMeta, byte[] buffer, out int bytesWritten, long offset);
     }
 }

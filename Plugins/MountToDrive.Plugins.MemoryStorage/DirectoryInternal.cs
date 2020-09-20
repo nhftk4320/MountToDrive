@@ -1,9 +1,8 @@
-﻿using DokanNet;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace MountToDrive.MemoryStoragePlugin
+namespace MountToDrive.Plugins.MemoryStorage
 {
     public class DirectoryInternal : FileInternal
     {

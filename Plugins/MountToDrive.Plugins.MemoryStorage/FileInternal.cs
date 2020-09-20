@@ -2,7 +2,7 @@
 using System;
 using System.IO;
 
-namespace MountToDrive.MemoryStoragePlugin
+namespace MountToDrive.Plugins.MemoryStorage
 {
     public class FileInternal : IDisposable
     {

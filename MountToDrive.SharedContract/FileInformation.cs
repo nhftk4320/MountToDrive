@@ -3,7 +3,7 @@ using System.IO;
 
 namespace MountToDrive.SharedContract
 {
-    public struct FileInformation
+    public class FileInformation
     {
         public string FileName { get; set; }
         public FileAttributes Attributes { get; set; }

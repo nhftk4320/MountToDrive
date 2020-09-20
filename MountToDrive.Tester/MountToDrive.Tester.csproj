@@ -3,6 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,8 +11,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MountToDrive.AnalysisTools\MountToDrive.AnalysisTools.csproj" />
     <ProjectReference Include="..\MountToDrive.Core\MountToDrive.Core.csproj" />
-    <ProjectReference Include="..\MountToDrive.MemoryStorage\MountToDrive.MemoryStorage.csproj" />
+    <ProjectReference Include="..\Plugins\MountToDrive.Plugins.GoogleDriveStorage\MountToDrive.Plugins.GoogleDriveStorage.csproj" />
+    <ProjectReference Include="..\Plugins\MountToDrive.Plugins.MemoryStorage\MountToDrive.Plugins.MemoryStorage.csproj" />
   </ItemGroup>
 
 </Project>

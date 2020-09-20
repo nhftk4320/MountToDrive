@@ -11,29 +11,54 @@ namespace MountToDrive.Core
     public class DokanImplementer : IDokanOperations
     {
         private readonly Contract.IFileSystemStorage _storage;
+        readonly Dictionary<string, HashSet<int>> _filesByProcess;
+        private readonly Action<string, string[]> _loggerAction;
 
-        public DokanImplementer(Contract.IFileSystemStorage storage)
+        public DokanImplementer(Contract.IFileSystemStorage storage, Action<string, string[]> loggerAction)
         {
             _storage = storage;
+            _filesByProcess = new Dictionary<string, HashSet<int>>();
+            _loggerAction = loggerAction;
         }
+
+        public void Log(string message, params string[] args) => _loggerAction(message, args);
 
         public void Cleanup(string fileName, IDokanFileInfo info)
         {
-            Contract.FileMeta fileMeta = GetFileMeta(fileName, info);
+            if (fileName == "\\") { return; }
+
+            Log($"{info.ProcessId}: Close {fileName}");
+
+
+            Contract.FileRequestMeta fileMeta = GetFileMeta(fileName, info);
             _storage.Cleanup(fileMeta, info.DeleteOnClose);
             return;
         }
 
         public void CloseFile(string fileName, IDokanFileInfo info)
         {
-            _storage.CloseFile(GetFileMeta(fileName, info));
+            if (fileName == "\\")
+            {
+                return;
+            }
+
+            Log($"{info.ProcessId}: Close {fileName}");
+
+            if (_filesByProcess.TryGetValue(fileName, out var processes))
+            {
+                processes.Remove(info.ProcessId);
+                if (processes.Count == 0)
+                {
+                    _storage.CloseFile(GetFileMeta(fileName, info));
+                }
+            }
             info.Context = null;
             return;
         }
 
         public NtStatus CreateFile(string fileName, DokanNet.FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, IDokanFileInfo info)
         {
-            if (mode == FileMode.CreateNew && fileName == "\\")
+            if (fileName == "\\")
             {
                 return NtStatus.Success;
             }
@@ -49,14 +74,18 @@ namespace MountToDrive.Core
             }
             if (fileOperationResult == Contract.FileOperationResult.Success && mode == FileMode.OpenOrCreate)
             {
-                return NtStatus.ObjectNameCollision;
+                fileOperationResult = Contract.FileOperationResult.ObjectNameCollision;
             }
             if (fileOperationResult == Contract.FileOperationResult.IsDirectoryNotFile)
             {
                 info.IsDirectory = true;
-                return NtStatus.Success;
+                fileOperationResult = Contract.FileOperationResult.Success;
             }
 
+            if (fileOperationResult == Contract.FileOperationResult.Success)
+            {
+                Log($"{info.ProcessId}: Open {fileName}");
+            }
 
             return (NtStatus)fileOperationResult;
         }
@@ -149,8 +178,8 @@ namespace MountToDrive.Core
 
         public NtStatus MoveFile(string oldName, string newName, bool replace, IDokanFileInfo info)
         {
-            Contract.FileMeta oldFileMeta = GetFileMeta(oldName, info);
-            Contract.FileMeta newFileMeta = GetFileMeta(newName, info);
+            Contract.FileRequestMeta oldFileMeta = GetFileMeta(oldName, info);
+            Contract.FileRequestMeta newFileMeta = GetFileMeta(newName, info);
 
             Contract.FileOperationResult result = _storage.MoveFile(oldFileMeta, newFileMeta, replace);
             return (NtStatus)result;
@@ -158,7 +187,22 @@ namespace MountToDrive.Core
 
         public NtStatus ReadFile(string fileName, byte[] buffer, out int bytesRead, long offset, IDokanFileInfo info)
         {
-            Contract.FileMeta fileMeta = GetFileMeta(fileName, info);
+            if (info.PagingIo && false)
+            {
+                bytesRead = -1;
+                return NtStatus.TooManyPagingFiles;
+            }
+
+            if (!_filesByProcess.TryGetValue(fileName, out HashSet<int> processes))
+            {
+                processes = new HashSet<int>();
+                _filesByProcess.Add(fileName, processes);
+            }
+            processes.Add(info.ProcessId);
+
+            Log($"{info.ProcessId}: Read {fileName}");
+
+            Contract.FileRequestMeta fileMeta = GetFileMeta(fileName, info);
 
             Contract.FileOperationResult result = _storage.ReadFile(fileMeta, buffer, out bytesRead, offset);
             return (NtStatus)result;
@@ -171,14 +215,14 @@ namespace MountToDrive.Core
 
         public NtStatus SetEndOfFile(string fileName, long length, IDokanFileInfo info)
         {
-            Contract.FileMeta fileMeta = GetFileMeta(fileName, info);
+            Contract.FileRequestMeta fileMeta = GetFileMeta(fileName, info);
             Contract.FileOperationResult result = _storage.SetFileSize(fileMeta, length);
             return (NtStatus)result;
         }
 
         public NtStatus SetFileAttributes(string fileName, FileAttributes attributes, IDokanFileInfo info)
         {
-            Contract.FileMeta fileMeta = GetFileMeta(fileName, info);
+            Contract.FileRequestMeta fileMeta = GetFileMeta(fileName, info);
 
             Contract.FileOperationResult result = _storage.SetFileAttributes(fileMeta, attributes);
             return (NtStatus)result;
@@ -206,12 +250,12 @@ namespace MountToDrive.Core
 
         public NtStatus WriteFile(string fileName, byte[] buffer, out int bytesWritten, long offset, IDokanFileInfo info)
         {
-            Contract.FileMeta fileMeta = GetFileMeta(fileName, info);
+            Contract.FileRequestMeta fileMeta = GetFileMeta(fileName, info);
             Contract.FileOperationResult result = _storage.WriteFile(fileMeta, buffer, out bytesWritten, offset);
             return (NtStatus)result;
         }
 
-        public Contract.FileMeta GetFileMeta(string fileName, IDokanFileInfo fileInfo)
+        public Contract.FileRequestMeta GetFileMeta(string fileName, IDokanFileInfo fileInfo)
         {
             string[] pathHierarchy = fileName.Split(new char[] { '\\' }, StringSplitOptions.RemoveEmptyEntries);
             Contract.FileType fileType = Contract.FileType.File;
@@ -226,7 +270,7 @@ namespace MountToDrive.Core
             }
 
 
-            return new Contract.FileMeta()
+            return new Contract.FileRequestMeta()
             {
                 FileType = fileType,
                 PathHierarchy = pathHierarchy,

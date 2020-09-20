@@ -6,11 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DokanNet" Version="1.4.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\MountToDrive.SharedContract\MountToDrive.SharedContract.csproj" />
+    <ProjectReference Include="..\..\MountToDrive.SharedContract\MountToDrive.SharedContract.csproj" />
   </ItemGroup>
 
 </Project>
